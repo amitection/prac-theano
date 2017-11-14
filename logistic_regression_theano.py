@@ -15,16 +15,16 @@ import gzip
 import os
 import sys
 
-class LogisticRegression:
+class LogisticRegression(object):
     
     
-    def _init_(self, input, n_in, n_out):
+    def __init__(self, input, n_in, n_out):
         # initializing the weights W with zeros
-        self.W = theano.shared(value = np.zeros(n_in, n_out), dtype = theano.config.floatX
+        self.W = theano.shared(value = np.zeros((n_in, n_out), dtype = theano.config.floatX)
                                , name='W', borrow = True)
     
         # bias or constant or intercept
-        self.b = theano.shared(value = np.zeros(n_out,), dtype = theano.config.floatX
+        self.b = theano.shared(value = np.zeros((n_out,), dtype = theano.config.floatX)
                                , name='b', borrow = True)
         
         # Probability of y given X. 
@@ -45,7 +45,7 @@ class LogisticRegression:
         
         
     def negative_log_likelihood(self, y):
-        return -T.mean(T.log(self.p_y_given_x)[T.arrange(y.shape[0]), y])
+        return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
     
     
     def error(self, y):
@@ -281,10 +281,12 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
            os.path.split(__file__)[1] +
            ' ran for %.1fs' % ((end_time - start_time))), file=sys.stderr)
     
+    return classifier
     
-def predict():
+    
+def predict(classifier):
     # loading the saved model
-    classifier = pickle.load(open('best_model.pkl'))
+    #classifier = pickle.load(open('best_model.pkl'))
     
     predict_model = theano.function(inputs=[classifier.input], outputs = classifier.y_pred)
 
@@ -293,13 +295,19 @@ def predict():
     test_set_x, test_set_y = datasets[2]
     test_set_x = test_set_x.get_value()
 
-    predicted_values = predict_model(test_set_x[:10])
+    predicted_values = predict_model(test_set_x)
     print("Predicted values for the first 10 examples in test set:")
     print(predicted_values)
-
+    
+    print("Calculating accuracy...")
+    
+    score = (predicted_values == test_set_y.eval()).mean()
+   
+    print("Accuracy: ",score)
 
 if __name__ == '__main__':
-    sgd_optimization_mnist()
+    classifier = sgd_optimization_mnist()
+    predict(classifier)
 
     
     
